@@ -23,9 +23,10 @@ CLIENT_SECRET = {
   "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
   "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/set-big-banner%40set-big-banner.iam.gserviceaccount.com"
 }
-MEGOGO_BANNERS_URL = 'https://docs.google.com/spreadsheets/d/1nWqPNCRQebWLb2UoZvY6TKt9ff57YhfTezJZi7AGIlk/edit#gid=0'
-TARGET_JSON_LOCATION = '/mnt/HC_Volume_2832716/www.fw.kivi.ua/firmware/'
-TARGET_JSON_NAME = 'row_rel_ua_4.json'
+SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1gMmTGJcv194r3-36_Z0VqW9yDIky_2lzly2zLO5KMZw/edit#gid=0'
+TARGET_JSON_LOCATION = '/mnt/HC_Volume_2832716/www.fw.kivi.ua/firmware/ads/'
+TARGET_JSON_UA = 'release_ads_ua_4.json'
+TARGET_JSON_RU = 'release_ads_ru_4.json'
 
 
 def get_data_from_spreadsheet():
@@ -33,7 +34,7 @@ def get_data_from_spreadsheet():
     credentials = ServiceAccountCredentials.from_json_keyfile_dict(CLIENT_SECRET, scope)
     client = gspread.authorize(credentials)
     try:
-        sheet_1 = client.open_by_url(MEGOGO_BANNERS_URL).get_worksheet(0)
+        sheet_1 = client.open_by_url(SPREADSHEET_URL).get_worksheet(0)
     except Exception as e:
         logging.error(f'Error in get_data_from_spreadsheet(): {e}')
         sys.exit(1)
@@ -101,7 +102,7 @@ def update_file(element, file_path, row_number, new_element=False):
 
 
 def main():
-    sheet1_timestamp = datetime.strptime(get_spreadsheet_modification_time(MEGOGO_BANNERS_URL)[:19],
+    sheet1_timestamp = datetime.strptime(get_spreadsheet_modification_time(SPREADSHEET_URL)[:19],
                                          '%Y-%m-%dT%H:%M:%S')
     if (datetime.now() - sheet1_timestamp).total_seconds() < (60 * 60 * 24 - 30):
         logging.basicConfig(filename='set-big-banner.log', level=logging.WARNING)
