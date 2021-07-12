@@ -1,5 +1,6 @@
 """
 Script for adding/updating big banners for Megogo/Okko
+Runs everyday at 22.00 PM
 """
 
 import json
@@ -26,8 +27,8 @@ CLIENT_SECRET = {
 }
 SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1gMmTGJcv194r3-36_Z0VqW9yDIky_2lzly2zLO5KMZw/edit#gid=0'
 TARGET_JSON_LOCATION = '/mnt/HC_Volume_2832716/www.fw.kivi.ua/firmware/ads/'
-TARGET_JSON_UA = 'release_ads_ua_4.json'
-TARGET_JSON_RU = 'release_ads_ru_4.json'
+TARGET_JSON_UA = 'test_ads_ua_4.json'  # 'release_ads_ua_4.json'
+TARGET_JSON_RU = 'test_ads_ru_4.json'  # 'release_ads_ru_4.json'
 
 
 def get_data_from_spreadsheet():
@@ -53,7 +54,7 @@ def get_spreadsheet_modification_time(sheet_url):
     return response['revisions'][-1]['modifiedTime']
 
 
-def set_banner(locale, img_url, count, start, end, interval, analytics):
+def set_banner(img_url, count, start, end, interval, package, analytics):
     banner = {
         'start_time': start,
         'expire_time': end,
@@ -72,7 +73,7 @@ def set_banner(locale, img_url, count, start, end, interval, analytics):
                 'style': 'button_one_hrn',
                 'action': 'startActivity',
                 'condition': 'package',
-                'package': 'tv.okko.androidtv' if locale.lower().startswith('ru') else 'com.megogo.application'
+                'package': package or 'com.kivi.launcher_v2'
             },
             {
                 'text': '$skip',
@@ -103,13 +104,13 @@ def main():
                                          '%Y-%m-%dT%H:%M:%S')
     if (datetime.now() - sheet1_timestamp).total_seconds() < (60 * 60 * 24 - 30):
         config = get_data_from_spreadsheet()[0]
-        banner = set_banner(config['locale'], config['start'], config['end'], config['count'],
-                            config['interval'], config['img_url'], config['analytics'])
+        banner = set_banner(config['Start_date'], config['Expire_date'], config['Count'],
+                            config['Interval'], config['Image'], config['Package'], config['Analytic'])
 
-        target_file = TARGET_JSON_RU if config['locale'].lower().startswith('ru') else TARGET_JSON_UA
+        target_file = TARGET_JSON_RU if config['Locale'].lower().startswith('ru') else TARGET_JSON_UA
         rename(TARGET_JSON_LOCATION + target_file,
                TARGET_JSON_LOCATION + datetime.now().strftime('%Y-%m-%dT%H-%M-%S_BACKUP_') + target_file)
-        update_file(banner, target_file, config['name'])
+        update_file(banner, target_file, config['Name'])
 
 
 if __name__ == '__main__':
