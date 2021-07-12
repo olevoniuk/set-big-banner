@@ -6,6 +6,7 @@ import json
 import logging
 import sys
 from datetime import datetime
+from os import rename
 
 import gspread
 import requests
@@ -88,8 +89,7 @@ def set_banner(locale, img_url, count, start, end, interval, analytics):
     return banner
 
 
-def update_file(banner, locale, name):
-    target_file = TARGET_JSON_RU if locale.lower().startswith('ru') else TARGET_JSON_UA
+def update_file(banner, target_file, name):
     with open(TARGET_JSON_LOCATION + target_file, mode='r', encoding='utf8') as fr:
         json_contents = json.loads(fr.read())
     json_contents['screens'][name] = banner
@@ -102,13 +102,17 @@ def main():
     sheet1_timestamp = datetime.strptime(get_spreadsheet_modification_time(SPREADSHEET_URL)[:19],
                                          '%Y-%m-%dT%H:%M:%S')
     if (datetime.now() - sheet1_timestamp).total_seconds() < (60 * 60 * 24 - 30):
-        logging.basicConfig(filename='set-big-banner.log', level=logging.WARNING)
         config = get_data_from_spreadsheet()[0]
         banner = set_banner(config['locale'], config['start'], config['end'], config['count'],
                             config['interval'], config['img_url'], config['analytics'])
-        update_file(banner, config['locale'], config['name'])
-        logging.shutdown()
+
+        target_file = TARGET_JSON_RU if config['locale'].lower().startswith('ru') else TARGET_JSON_UA
+        rename(TARGET_JSON_LOCATION + target_file,
+               TARGET_JSON_LOCATION + datetime.now().strftime('%Y-%m-%dT%H-%M-%S_BACKUP_') + target_file)
+        update_file(banner, target_file, config['name'])
 
 
 if __name__ == '__main__':
+    logging.basicConfig(filename='set-big-banner.log', level=logging.WARNING)
     main()
+    logging.shutdown()
