@@ -65,7 +65,7 @@ def set_banner(img_url, count, start, end, interval, package, analytics):
             'top': 830,
             'left': 585
         },
-        'repeat': interval * 24 * 60 * 60 * 1000,
+        'repeat': int(interval) * 24 * 60 * 60 * 1000,
         'type': 'kivi_tv',
         'buttons': [
             {
@@ -93,6 +93,8 @@ def set_banner(img_url, count, start, end, interval, package, analytics):
 def update_file(banner, target_file, name):
     with open(TARGET_JSON_LOCATION + target_file, mode='r', encoding='utf8') as fr:
         json_contents = json.loads(fr.read())
+    rename(TARGET_JSON_LOCATION + target_file,
+           TARGET_JSON_LOCATION + datetime.now().strftime('%Y-%m-%dT%H-%M-%S_BACKUP_') + target_file)
     json_contents['screens'][name] = banner
     json_contents['creation_time'] = datetime.now().strftime('%d.%m.%yT%H:%M')
     with open(TARGET_JSON_LOCATION + target_file, mode='w', encoding='utf8') as fw:
@@ -104,12 +106,10 @@ def main():
                                          '%Y-%m-%dT%H:%M:%S')
     if (datetime.now() - sheet1_timestamp).total_seconds() < (60 * 60 * 24 - 30):
         config = get_data_from_spreadsheet()[0]
-        banner = set_banner(config['Start_date'], config['Expire_date'], config['Count'],
-                            config['Interval'], config['Image'], config['Package'], config['Analytic'])
+        banner = set_banner(config['Image'], config['Count'], config['Start_date'], config['Expire_date'],
+                            config['Interval'], config['Package'], config['Analytic'])
 
         target_file = TARGET_JSON_RU if config['Locale'].lower().startswith('ru') else TARGET_JSON_UA
-        rename(TARGET_JSON_LOCATION + target_file,
-               TARGET_JSON_LOCATION + datetime.now().strftime('%Y-%m-%dT%H-%M-%S_BACKUP_') + target_file)
         update_file(banner, target_file, config['Name'])
 
 
